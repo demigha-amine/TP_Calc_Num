@@ -52,8 +52,11 @@ int main(int argc,char *argv[])
   AB = (double *) malloc(sizeof(double)*lab*la);
 
   set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB.dat");
 
-  // write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB.dat");
+  set_GB_operator_colMajor_poisson1D_Id(AB, &lab, &la, &kv);
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB_Id.dat");
+
 
   printf("Solution with LAPACK\n");
   /* LU Factorization */
