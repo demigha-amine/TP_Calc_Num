@@ -5,17 +5,56 @@
 /**********************************************/
 #include "lib_poisson1D.h"
 
-void set_GB_operator_colMajor_poisson1D(double* AB, int *lab, int *la, int *kv){
-/*
-   for (ii=0;ii<(*lab);ii++){
-      for (jj=0;jj<(*la);jj++){
-          AB[ii*(*la)+jj]
-      } 
-   } 
-*/
+void set_GB_operator_colMajor_poisson1D(double* AB, int *lab, int *la, int *kv)
+{
+
+  for (int j=0; j<(*la); j++)
+  {
+    int indice  = j * (*lab); //l'indice j*n
+
+    //pour la premiere colonne = 0 (kv = 1)
+    if (*kv>=0)
+    {
+      for (int i=0; i< *kv; i++)  AB[indice+i]=0.0;
+    }
+    
+    //pour les autres elements
+    AB[indice+ *kv]=-1.0;
+    AB[indice+ *kv+1]=2.0;
+    AB[indice+ *kv+2]=-1.0;
+  }
+  //pour le premier element apres la colonne kv 
+  if(*kv == 0) AB[0]=0.0;
+  if(*kv == 1) AB[1]=0.0;
+  
+  //pour le dernier element = 0
+  AB[(*lab)*(*la)-1]=0.0; //indice = n*m - 1 
 }
 
-void set_GB_operator_colMajor_poisson1D_Id(double* AB, int *lab, int *la, int *kv){
+void set_GB_operator_colMajor_poisson1D_Id(double* AB, int *lab, int *la, int *kv)
+{
+
+  for (int j=0; j<(*la); j++)
+  {
+    int indice  = j * (*lab); //l'indice j*n
+
+    //pour la premiere colonne = 0 (kv = 1)
+    if (*kv>=0)
+    {
+      for (int i=0; i< *kv; i++)  AB[indice+i]=0.0;
+    }
+    
+    //pour les autres elements
+    AB[indice+ *kv]=0.0;
+    AB[indice+ *kv+1]=1.0;
+    AB[indice+ *kv+2]=0.0;
+  }
+  //pour le premier element apres la colonne kv 
+  if(*kv == 0) AB[0]=0.0;
+  if(*kv == 1) AB[1]=0.0;
+  
+  //pour le dernier element = 0
+  AB[(*lab)*(*la)-1]=0.0; //indice = n*m - 1 
 }
 
 void set_dense_RHS_DBC_1D(double* RHS, int* la, double* BC0, double* BC1){
@@ -42,11 +81,11 @@ void set_analytical_solution_DBC_1D(double* EX_SOL, double* X, int* la, double* 
 
 void set_grid_points_1D(double* x, int* la){
   //le pas h
-  double h = 1.0 / (*la - 1);
+  double h = 1.0 / (*la + 1);
 
-  //from 0 to 1
-  for (int i=1; i<(*la); i++)
-    x[i] = i * h;
+  //from ]0,1[
+  for (int i=0; i<(*la); i++)
+    x[i] = (i+1) * h;
 }
 
 void write_GB_operator_rowMajor_poisson1D(double* AB, int* lab, int* la, char* filename){
