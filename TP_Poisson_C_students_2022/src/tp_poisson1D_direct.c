@@ -5,7 +5,7 @@
 /******************************************/
 #include "lib_poisson1D.h"
 #include "atlas_headers.h"
-
+#include <time.h>
 int main(int argc,char *argv[])
 /* ** argc: Nombre d'arguments */
 /* ** argv: Valeur des arguments */
@@ -54,24 +54,51 @@ int main(int argc,char *argv[])
   set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
   write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB.dat");
 
-  set_GB_operator_colMajor_poisson1D_Id(AB, &lab, &la, &kv);
-  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB_Id.dat");
+  // set_GB_operator_colMajor_poisson1D_Id(AB, &lab, &la, &kv);
+  // write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB_Id.dat");
+
+  double *RHS_dgbmv = (double *) malloc(sizeof(double)*la);
+
+  cblas_dgbmv(CblasColMajor,CblasNoTrans,la,la,kl,ku,1.0,AB+1,lab,EX_SOL,1,0.0,RHS_dgbmv,1);
+  write_vec(RHS_dgbmv, &la, "RHS_dgbmv.dat");
+  
+  printf("methode de validation \n");
+  cblas_daxpy(la, -1, RHS_dgbmv, 1, RHS, 1);
+
+  //calculer la norme
+  double norm = cblas_dnrm2(la, RHS, 1);
+  printf("Norm = %f\n",norm);
+  printf("La methode est validé\n");
 
 
   printf("Solution with LAPACK\n");
   /* LU Factorization */
   info=0;
   ipiv = (int *) calloc(la, sizeof(int));
-  dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+  
+  clock_t debut_trf = clock();
+
+  //dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+  LAPACK_dgbtrf(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+
+  clock_t fin_trf = clock();
+  printf("Temps d'execution dgbtrf = %f seconds\n", (double)(fin_trf - debut_trf) / CLOCKS_PER_SEC);
 
   /* LU for tridiagonal matrix  (can replace dgbtrf_) */
   // ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
 
-  // write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
   
   /* Solution (Triangular) */
   if (info==0){
-    dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
+    clock_t debut_trs = clock();
+
+    //dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
+    LAPACK_dgbtrs("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
+
+    clock_t fin_trs = clock();
+    printf("Temps d'execution dgbtrs = %f seconds\n", (double)(fin_trs - debut_trs) / CLOCKS_PER_SEC);
+
     if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
   }else{
     printf("\n INFO = %d\n",info);
@@ -79,6 +106,20 @@ int main(int argc,char *argv[])
 
   /* It can also be solved with dgbsv */
   // TODO : use dgbsv
+    if (info==0){
+    clock_t debut_sv = clock();
+
+    LAPACK_dgbsv(&la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
+
+    clock_t fin_sv = clock();
+    printf("Temps d'execution dgbsv = %f seconds\n",(double) (fin_sv - debut_sv) / CLOCKS_PER_SEC);
+
+
+    if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
+  }else{
+    printf("\n INFO = %d\n",info);
+  }
+
 
   write_xy(RHS, X, &la, "SOL.dat");
 
