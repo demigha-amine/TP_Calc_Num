@@ -75,6 +75,20 @@ int main(int argc,char *argv[])
   /* LU Factorization */
   info=0;
   ipiv = (int *) calloc(la, sizeof(int));
+
+   /* LU for tridiagonal matrix  (can replace dgbtrf_) */
+  printf("Factorisation LU sans DGBTRF \n");
+
+  clock_t debut_lu = clock();
+  ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info, &kv);
+  clock_t fin_lu = clock();
+
+  printf("Temps d'execution LU sans DGBTRF  = %f seconds\n", (double)(fin_lu - debut_lu) / CLOCKS_PER_SEC);
+
+
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "notre_LU.dat");
+  set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+
   
   clock_t debut_trf = clock();
 
@@ -82,12 +96,11 @@ int main(int argc,char *argv[])
   info = LAPACKE_dgbtrf(LAPACK_COL_MAJOR, la, la, kl, ku, AB, lab, ipiv);
 
   clock_t fin_trf = clock();
+  printf("Temps d'execution DGBTRF  = %f seconds\n", (double)(fin_trf - debut_trf) / CLOCKS_PER_SEC);
 
-
-  /* LU for tridiagonal matrix  (can replace dgbtrf_) */
-  // ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
-
+  
   write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
+ 
   
   /* Solution (Triangular) */
   set_dense_RHS_DBC_1D(RHS,&la,&T0,&T1);
