@@ -9,7 +9,9 @@ This directory contains the code corresponding to the solution of Poisson 1D pro
 It is organized in three directories:
 
 src/ 
+
 include/
+
 bin/
 
 "src" contains the source codes, "include" contains the  header files and "bin" contains the executables. 
