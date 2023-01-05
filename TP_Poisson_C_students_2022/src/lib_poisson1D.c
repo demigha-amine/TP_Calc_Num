@@ -214,20 +214,12 @@ void richardson_MB(double *AB, double *RHS, double *X, double *MB, int *lab, int
 int indexABCol(int i, int j, int *lab){
   return j*(*lab)+i;
 }
-int dgbtrftridiag(int *la, int*n, int *kl, int *ku, double *AB, int *lab, int *ipiv, int *info){
-  return *info;
-}
 
-
-
-
-// LU FACTORISATION FUNCTION
-void LU_Facto(double* AB, int *lab, int *la, int *kv){
-    int i, j, k, k1 = 3;
-
+int dgbtrftridiag(int *la, int*n, int *kl, int *ku, double *AB, int *lab, int *ipiv, int *info, int* kv){
+  int i, j, k, kk = 3;
 
       if (*kv>=0){
-        k1 = 4;
+        kk = 4;
         for (i=0;i< *kv;i++){
             AB[i]=0.0;
         }
@@ -243,10 +235,9 @@ void LU_Facto(double* AB, int *lab, int *la, int *kv){
         }
       }
 
-      printf("kv+2 = %lf\n",AB[(k-3)+ *kv+2]);
 
-      AB[k+ *kv+1]-=AB[k+ *kv]*AB[(k-k1)+ *kv+2];
-      AB[k+ *kv+2]/=AB[k+ *kv+1];
+      AB[k+ *kv+1] -= AB[k+ *kv] * AB[(k-kk)+ *kv+2];
+      AB[k+ *kv+2] /= AB[k+ *kv+1];
     }
-
-  }
+  return *info;
+}
