@@ -4,13 +4,6 @@ Repertoire Scilab --> Les TPs sous Scilab.
 
 Repertoire TP_Poisson_C_students_2022 --> Les TPs en language C.
 
-
-##########################################################
-# README
-#
-# T. Dufaud
-##########################################################
-
 This directory contains the code corresponding to the solution
 of Poisson 1D problem by direct method or iterative method.
 It is organized in three directories:
