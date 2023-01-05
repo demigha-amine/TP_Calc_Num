@@ -78,16 +78,19 @@ int main(int argc,char *argv[])
 
    /* LU for tridiagonal matrix  (can replace dgbtrf_) */
   printf("Factorisation LU sans DGBTRF \n");
+  double* AB_LU = (double *) malloc(sizeof(double)*lab*la);
+  set_GB_operator_colMajor_poisson1D(AB_LU, &lab, &la, &kv);
+
+
 
   clock_t debut_lu = clock();
-  ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info, &kv);
+  ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB_LU, &lab, ipiv, &info, &kv);
   clock_t fin_lu = clock();
 
   printf("Temps d'execution LU sans DGBTRF  = %f seconds\n", (double)(fin_lu - debut_lu) / CLOCKS_PER_SEC);
 
 
-  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "notre_LU.dat");
-  set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+  write_GB_operator_colMajor_poisson1D(AB_LU, &lab, &la, "notre_LU.dat");
 
   
   clock_t debut_trf = clock();
@@ -100,6 +103,14 @@ int main(int argc,char *argv[])
 
   
   write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
+
+  printf("methode de validation LU \n");
+  cblas_daxpy(la, -1, AB_LU, 1, AB, 1);
+
+  //calculer la norme
+  double norm_LU = cblas_dnrm2(la, AB, 1);
+  printf("Norm LU = %f\n",norm_LU);
+  printf("La methode est validé\n");
  
   
   /* Solution (Triangular) */
