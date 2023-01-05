@@ -23,8 +23,8 @@ void set_GB_operator_colMajor_poisson1D(double* AB, int *lab, int *la, int *kv)
     AB[indice+ *kv+1]=2.0;
     AB[indice+ *kv+2]=-1.0;
   }
-  //pour le premier element apres la colonne kv 
-  if(*kv == 0) AB[0]=0.0;
+  //pour le premier element
+  AB[0]=0.0;
   if(*kv == 1) AB[1]=0.0;
   
   //pour le dernier element = 0
@@ -49,10 +49,9 @@ void set_GB_operator_colMajor_poisson1D_Id(double* AB, int *lab, int *la, int *k
     AB[indice+ *kv+1]=1.0;
     AB[indice+ *kv+2]=0.0;
   }
-  //pour le premier element apres la colonne kv 
-  if(*kv == 0) AB[0]=0.0;
-  if(*kv == 1) AB[1]=0.0;
-  
+  //pour le premier element apres la colonne kv
+  AB[1]=0.0;
+
   //pour le dernier element = 0
   AB[(*lab)*(*la)-1]=0.0; //indice = n*m - 1 
 }
@@ -180,9 +179,74 @@ void write_xy(double* vec, double* x, int* la, char* filename){
   } 
 }  
 
-int indexABCol(int i, int j, int *lab){
+
+void eig_poisson1D(double* eigval, int *la){
+}
+
+double eigmax_poisson1D(int *la){
   return 0;
+}
+
+double eigmin_poisson1D(int *la){
+  return 0;
+}
+
+double richardson_alpha_opt(int *la){
+  return 0;
+}
+
+void richardson_alpha(double *AB, double *RHS, double *X, double *alpha_rich, int *lab, int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+
+}
+
+void extract_MB_jacobi_tridiag(double *AB, double *MB, int *lab, int *la,int *ku, int*kl, int *kv){
+
+}
+
+void extract_MB_gauss_seidel_tridiag(double *AB, double *MB, int *lab, int *la,int *ku, int*kl, int *kv){
+
+}
+
+void richardson_MB(double *AB, double *RHS, double *X, double *MB, int *lab, int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+
+}
+
+int indexABCol(int i, int j, int *lab){
+  return j*(*lab)+i;
 }
 int dgbtrftridiag(int *la, int*n, int *kl, int *ku, double *AB, int *lab, int *ipiv, int *info){
   return *info;
 }
+
+
+
+
+// LU FACTORISATION FUNCTION
+void LU_Facto(double* AB, int *lab, int *la, int *kv){
+    int i, j, k, k1 = 3;
+
+
+      if (*kv>=0){
+        k1 = 4;
+        for (i=0;i< *kv;i++){
+            AB[i]=0.0;
+        }
+      }
+      AB[*kv+2]/=AB[*kv+1];
+    
+
+    for (j=1;j<(*la);j++){
+      k = j*(*lab);
+      if (*kv>=0){
+        for (i=0;i< *kv;i++){
+            AB[k+i]=0.0;
+        }
+      }
+
+      printf("kv+2 = %lf\n",AB[(k-3)+ *kv+2]);
+
+      AB[k+ *kv+1]-=AB[k+ *kv]*AB[(k-k1)+ *kv+2];
+      AB[k+ *kv+2]/=AB[k+ *kv+1];
+    }
+
+  }

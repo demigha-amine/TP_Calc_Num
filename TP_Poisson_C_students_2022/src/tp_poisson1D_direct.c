@@ -79,10 +79,10 @@ int main(int argc,char *argv[])
   clock_t debut_trf = clock();
 
   //dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
-  LAPACK_dgbtrf(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
+  info = LAPACKE_dgbtrf(LAPACK_COL_MAJOR, la, la, kl, ku, AB, lab, ipiv);
 
   clock_t fin_trf = clock();
-  printf("Temps d'execution dgbtrf = %f seconds\n", (double)(fin_trf - debut_trf) / CLOCKS_PER_SEC);
+
 
   /* LU for tridiagonal matrix  (can replace dgbtrf_) */
   // ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
@@ -90,14 +90,20 @@ int main(int argc,char *argv[])
   write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
   
   /* Solution (Triangular) */
+  set_dense_RHS_DBC_1D(RHS,&la,&T0,&T1);
+
   if (info==0){
+
     clock_t debut_trs = clock();
 
     //dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
-    LAPACK_dgbtrs("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
+    info = LAPACKE_dgbtrs(LAPACK_COL_MAJOR, 'N', la, kl, ku, NRHS, AB, lab, ipiv, RHS, la);
 
     clock_t fin_trs = clock();
-    printf("Temps d'execution dgbtrs = %f seconds\n", (double)(fin_trs - debut_trs) / CLOCKS_PER_SEC);
+
+    write_xy(RHS, X, &la, "TRS.dat");
+
+    printf("Temps d'execution dgbtrf + dgbtrs = %f seconds\n", (double)((fin_trf - debut_trf) + (fin_trs - debut_trs)) / CLOCKS_PER_SEC);
 
     if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
   }else{
@@ -106,25 +112,41 @@ int main(int argc,char *argv[])
 
   /* It can also be solved with dgbsv */
   // TODO : use dgbsv
+  /* It can also be solved with dgbsv (dgbtrf+dgbtrs) */
+  /*  ierr = dgbsv_(&la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);*/
+  
+    set_dense_RHS_DBC_1D(RHS,&la,&T0,&T1);
+    set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
+
+
     if (info==0){
     clock_t debut_sv = clock();
 
     LAPACK_dgbsv(&la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
 
     clock_t fin_sv = clock();
+      write_xy(RHS, X, &la, "SV.dat");
+
     printf("Temps d'execution dgbsv = %f seconds\n",(double) (fin_sv - debut_sv) / CLOCKS_PER_SEC);
 
 
     if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
-  }else{
-    printf("\n INFO = %d\n",info);
-  }
+    }else{
+     printf("\n INFO = %d\n",info);
+    }
+
+
 
 
   write_xy(RHS, X, &la, "SOL.dat");
 
   /* Relative forward error */
-  // TODO : Compute relative norm of the residual
+  temp = cblas_ddot(la, RHS, 1, RHS,1);
+  temp = sqrt(temp);
+  cblas_daxpy(la, -1.0, RHS, 1, EX_SOL, 1);
+  relres = cblas_ddot(la, EX_SOL, 1, EX_SOL,1);
+  relres = sqrt(relres);
+  relres = relres / temp;
   
   printf("\nThe relative forward error is relres = %e\n",relres);
 
@@ -133,4 +155,5 @@ int main(int argc,char *argv[])
   free(X);
   free(AB);
   printf("\n\n--------- End -----------\n");
+
 }
