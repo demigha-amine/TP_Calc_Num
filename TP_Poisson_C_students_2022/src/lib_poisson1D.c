@@ -181,26 +181,74 @@ void write_xy(double* vec, double* x, int* la, char* filename){
 
 
 void eig_poisson1D(double* eigval, int *la){
+  int i;
+  double scal;
+  for (i=0; i< *la; i++){
+    scal = (1.0*i+1.0)* M_PI_2 *(1.0/(*la+1));
+    eigval[i] = sin(scal);
+    eigval[i] = 4 * eigval[i] * eigval[i];
+  } 
 }
 
 double eigmax_poisson1D(int *la){
-  return 0;
+  double eigmax;
+  eigmax = sin(*la * M_PI_2 *(1.0/(*la+1)));
+  eigmax = 4 * eigmax * eigmax;
+  return eigmax;
 }
 
 double eigmin_poisson1D(int *la){
-  return 0;
+  double eigmin;
+  eigmin = sin(M_PI_2 * (1.0/(*la+1)));
+  eigmin = 4 * eigmin * eigmin;
+  return eigmin;
 }
 
 double richardson_alpha_opt(int *la){
-  return 0;
+    return 2.0 / (eigmax_poisson1D(la) + eigmin_poisson1D(la));
 }
 
-void richardson_alpha(double *AB, double *RHS, double *X, double *alpha_rich, int *lab, int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+void richardson_alpha(double *AB, double *RHS, double *X, double *alpha_rich, int *lab, 
+int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
 
-}
+  double res_norm;
+
+    cblas_dcopy(*la, RHS, 1, resvec, 1);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, *la, *la, *kl, *ku, -1.0, AB, *lab, X,1, 1.0, resvec, 1);
+    cblas_daxpy(*la, *alpha_rich, resvec, 1, X, 1);
+    res_norm = cblas_dnrm2(*la, resvec, 1);
+    res_norm /= cblas_dnrm2(*la, RHS, 1);
+
+  // x(k+1) = x(k) + alpha(b - Ax(k))
+  while (res_norm > *tol && *nbite < *maxit) {
+
+    cblas_dcopy(*la, RHS, 1, resvec, 1);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, *la, *la, *kl, *ku, -1.0, AB, *lab, X,1, 1.0, resvec, 1);
+    cblas_daxpy(*la, *alpha_rich, resvec, 1, X, 1);
+    res_norm = cblas_dnrm2(*la, resvec, 1);
+    res_norm /= cblas_dnrm2(*la, RHS, 1);
+    //printf("%d %1.6f\n", *nbit, res_norm);
+    
+
+    (*nbite)++;
+  }
+
+  printf("res_norm =  %1.6f\n",res_norm);
+  printf("cpt = %d \n", *nbite);
+
+  }
+
 
 void extract_MB_jacobi_tridiag(double *AB, double *MB, int *lab, int *la,int *ku, int*kl, int *kv){
+  int i,j;
 
+  for (i = 0; i < (*la); i++)
+  {
+    //recuperer l'index 
+    j = indexABCol(0,i,lab);
+    //recuperer l'inverse du diagonale de AB dans MB
+    MB[j + *kv] = 1 / AB[j + *kv];
+  }
 }
 
 void extract_MB_gauss_seidel_tridiag(double *AB, double *MB, int *lab, int *la,int *ku, int*kl, int *kv){
@@ -216,28 +264,32 @@ int indexABCol(int i, int j, int *lab){
 }
 
 int dgbtrftridiag(int *la, int*n, int *kl, int *ku, double *AB, int *lab, int *ipiv, int *info, int* kv){
-  int i, j, k, kk = 3;
+  int i, j, k, kk = 3; //kk : nbr d colonnes
 
       if (*kv>=0){
-        kk = 4;
+        kk = 4; 
         for (i=0;i< *kv;i++){
             AB[i]=0.0;
         }
       }
-      AB[*kv+2]/=AB[*kv+1];
-    
 
-    for (j=1;j<(*la);j++){
-      k = j*(*lab);
+      AB[*kv+2]/=AB[*kv+1]; //modification
+
+    for (j=1;j<(*la);j++)
+    {
       if (*kv>=0){
-        for (i=0;i< *kv;i++){
-            AB[k+i]=0.0;
+        for (i=0;i< *kv;i++)
+        {
+            k = indexABCol(i,j,lab); //recupere l'index
+            AB[k]=0.0;
         }
       }
 
-
+      k = indexABCol(0,j,lab);
       AB[k+ *kv+1] -= AB[k+ *kv] * AB[(k-kk)+ *kv+2];
       AB[k+ *kv+2] /= AB[k+ *kv+1];
     }
+
   return *info;
 }
+
