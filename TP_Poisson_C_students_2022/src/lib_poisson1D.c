@@ -253,6 +253,36 @@ void extract_MB_jacobi_tridiag(double *AB, double *MB, int *lab, int *la,int *ku
 
 void extract_MB_gauss_seidel_tridiag(double *AB, double *MB, int *lab, int *la,int *ku, int*kl, int *kv){
 
+  int i;
+  //la taille du matrice MB_Gauss_seidel
+  int size = (*la) * (*la);
+  //matrice temporaire
+  double *temp = (double *) calloc(size, sizeof(double)); 
+
+  for (i = 0; i < *la; i++) 
+  { 
+    //recuperer les indices
+    int k = indexABCol(i,i,la); 
+    int kk = indexABCol(1,i,lab);
+    temp[k] = AB[kk]; 
+  }
+
+  for (i = 0; i < *la - 1; i++) 
+  {
+    int k = indexABCol(i,i+1,la);
+    int kk = indexABCol(2,i,lab);
+    temp[k] = AB[kk];
+  }
+
+  int *ipiv = malloc(sizeof(int) * (*la));
+  //factorisation LU
+  LAPACKE_dgetrf(CblasRowMajor, *la, *la, temp, *la, ipiv);
+  //inverse de temp
+  LAPACKE_dgetri(CblasRowMajor, *la, temp, *la, ipiv);
+  free(ipiv);
+  
+  //recopier temp dans MB
+  cblas_dcopy(size, temp, 1, MB, 1);
 }
 
 void richardson_MB(double *AB, double *RHS, double *X, double *MB, int *lab, int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
