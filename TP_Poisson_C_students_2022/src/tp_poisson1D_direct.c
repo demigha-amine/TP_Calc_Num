@@ -25,7 +25,7 @@ int main(int argc,char *argv[])
   double temp, relres;
 
   NRHS=1;
-  nbpoints=10;
+  nbpoints=12;
   la=nbpoints-2;
   T0=-5.0;
   T1=5.0;
@@ -148,8 +148,9 @@ int main(int argc,char *argv[])
 
     LAPACK_dgbsv(&la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
 
+
     clock_t fin_sv = clock();
-      write_xy(RHS, X, &la, "SV.dat");
+    write_xy(RHS, X, &la, "SV.dat");
 
     printf("Temps d'execution dgbsv = %f seconds\n",(double) (fin_sv - debut_sv) / CLOCKS_PER_SEC);
 

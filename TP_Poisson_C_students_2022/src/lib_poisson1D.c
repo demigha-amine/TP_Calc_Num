@@ -233,10 +233,10 @@ int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
     (*nbite)++;
   }
 
-  printf("res_norm =  %1.6f\n",res_norm);
-  printf("cpt = %d \n", *nbite);
+  //printf("res_norm Richardson_ALPHA =  %1.6f\n",res_norm);
+  printf("Nombre iteration avec Richardson_ALPHA = %d \n", *nbite);
 
-  }
+}
 
 
 void extract_MB_jacobi_tridiag(double *AB, double *MB, int *lab, int *la,int *ku, int*kl, int *kv){
@@ -280,12 +280,68 @@ void extract_MB_gauss_seidel_tridiag(double *AB, double *MB, int *lab, int *la,i
   //inverse de temp
   LAPACKE_dgetri(CblasRowMajor, *la, temp, *la, ipiv);
   free(ipiv);
-  
+
   //recopier temp dans MB
   cblas_dcopy(size, temp, 1, MB, 1);
 }
 
-void richardson_MB(double *AB, double *RHS, double *X, double *MB, int *lab, int *la,int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+//avec extraction jacobi
+void richardson_MB_Jacobi(double *AB, double *RHS, double *X, double *MB, int *lab, int *la,
+int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+  double res_norm;
+
+    cblas_dcopy(*la, RHS, 1, resvec, 1);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, *la, *la, *kl, *ku, -1.0, AB, *lab, X,1, 1.0, resvec, 1);
+    res_norm = cblas_dnrm2(*la, resvec, 1);
+    res_norm /= cblas_dnrm2(*la, RHS, 1);
+
+  // x(k+1) = x(k) + alpha(b - Ax(k))
+  while (res_norm > *tol && *nbite < *maxit) {
+
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, *la, *la, *kl, *ku, 1.0, MB, *lab, resvec,1, 1.0, X, 1);
+
+    cblas_dcopy(*la, RHS, 1, resvec, 1);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, *la, *la, *kl, *ku, -1.0, AB, *lab, X,1, 1.0, resvec, 1);
+    res_norm = cblas_dnrm2(*la, resvec, 1);
+    res_norm /= cblas_dnrm2(*la, RHS, 1);
+    //printf("%d %1.6f\n", *nbit, res_norm);
+    
+
+    (*nbite)++;
+  }
+
+  //printf("res_norm Richardson_MB_JACOBI =  %1.6f\n",res_norm);
+  printf("Nombre iteration avec Richardson_MB_JACOBI = %d \n", *nbite);
+
+}
+
+//avec extraction gauss
+void richardson_MB_Gauss(double *AB, double *RHS, double *X, double *MB, int *lab, int *la,
+int *ku, int*kl, double *tol, int *maxit, double *resvec, int *nbite){
+    double res_norm;
+
+    cblas_dcopy(*la, RHS, 1, resvec, 1);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, *la, *la, *kl, *ku, -1.0, AB, *lab, X,1, 1.0, resvec, 1);
+    res_norm = cblas_dnrm2(*la, resvec, 1);
+    res_norm /= cblas_dnrm2(*la, RHS, 1);
+
+  // x(k+1) = x(k) + alpha(b - Ax(k))
+  while (res_norm > *tol && *nbite < *maxit) {
+
+    cblas_dgemv(CblasColMajor, CblasNoTrans, *la, *la, 1.0, MB, *la, resvec,1, 1.0, X, 1);
+
+    cblas_dcopy(*la, RHS, 1, resvec, 1);
+    cblas_dgbmv(CblasColMajor, CblasNoTrans, *la, *la, *kl, *ku, -1.0, AB, *lab, X,1, 1.0, resvec, 1);
+    res_norm = cblas_dnrm2(*la, resvec, 1);
+    res_norm /= cblas_dnrm2(*la, RHS, 1);
+    //printf("%d %1.6f\n", *nbit, res_norm);
+    
+
+    (*nbite)++;
+  }
+
+  //printf("res_norm =  %1.6f\n",res_norm);
+  printf("Nombre iteration avec Richardson_MB_GAUSS = %d \n", *nbite);
 
 }
 

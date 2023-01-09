@@ -79,6 +79,11 @@ int main(int argc,char *argv[])
 
   /* Solve with Richardson alpha */
   richardson_alpha(AB, RHS, SOL, &opt_alpha, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
+  
+  free(SOL);
+  SOL=( double *) calloc(la, sizeof(double));
+  nbite = 0; 
+
 
   /* Richardson General Tridiag */
 
@@ -86,16 +91,30 @@ int main(int argc,char *argv[])
   kv = 1;
   ku = 1;
   kl = 1;
-  MB = (double *) malloc(sizeof(double)*(lab)*la);
+  MB = (double *) malloc(sizeof(double)*(la)*la);
 
+  /* AVEC JACOBI */
   extract_MB_jacobi_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
   write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "MB_JACOBI.dat");
 
-  
-  // extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
-  
   /* Solve with General Richardson */
-  // richardson_MB(AB, RHS, SOL, MB, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
+  richardson_MB_Jacobi(AB, RHS, SOL, MB, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
+
+  free(SOL);
+  SOL=( double *) calloc(la, sizeof(double));
+  nbite = 0; 
+  free(MB);
+  MB = (double *) malloc(sizeof(double)*(la)*la);
+
+
+  /* AVEC GAUSS SEIDEL */
+  extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
+  write_GB_operator_colMajor_poisson1D(MB, &la, &la, "MB_GAUSS_SEIDEL.dat");
+
+  /* Solve with General Richardson */
+  richardson_MB_Gauss(AB, RHS, SOL, MB, &lab, &la, &ku, &kl, &tol, &maxit, resvec, &nbite);
+
+
   
   /* Write solution */
   write_vec(SOL, &la, "SOL.dat");
