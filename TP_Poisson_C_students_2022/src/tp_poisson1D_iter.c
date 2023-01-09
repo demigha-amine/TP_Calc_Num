@@ -60,14 +60,14 @@ int main(int argc,char *argv[])
   set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
   
   /* uncomment the following to check matrix A */
-  // write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB.dat");
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB.dat");
   
   /********************************************/
   /* Solution (Richardson with optimal alpha) */
 
   /* Computation of optimum alpha */
   opt_alpha = richardson_alpha_opt(&la);
-  printf("Optimal alpha for simple Richardson iteration is : %lf",opt_alpha); 
+  printf("Optimal alpha for simple Richardson iteration is : %lf\n",opt_alpha); 
 
   /* Solve */
   double tol=1e-3;
@@ -87,7 +87,11 @@ int main(int argc,char *argv[])
   ku = 1;
   kl = 1;
   MB = (double *) malloc(sizeof(double)*(lab)*la);
-  // extract_MB_jacobi_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
+
+  extract_MB_jacobi_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
+  write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "MB_JACOBI.dat");
+
+  
   // extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
   
   /* Solve with General Richardson */
