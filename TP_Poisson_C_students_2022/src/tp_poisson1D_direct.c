@@ -40,9 +40,9 @@ int main(int argc,char *argv[])
   set_dense_RHS_DBC_1D(RHS,&la,&T0,&T1);
   set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
   
-  write_vec(RHS, &la, "RHS.dat");
-  write_vec(EX_SOL, &la, "EX_SOL.dat");
-  write_vec(X, &la, "X_grid.dat");
+  write_vec(RHS, &la, "./direct dat/RHS.dat");
+  write_vec(EX_SOL, &la, "./direct dat/EX_SOL.dat");
+  write_vec(X, &la, "./direct dat/X_grid.dat");
 
   kv=1;
   ku=1;
@@ -52,15 +52,15 @@ int main(int argc,char *argv[])
   AB = (double *) malloc(sizeof(double)*lab*la);
 
   set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
-  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB.dat");
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "./direct dat/AB.dat");
 
-  // set_GB_operator_colMajor_poisson1D_Id(AB, &lab, &la, &kv);
-  // write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB_Id.dat");
+  //set_GB_operator_colMajor_poisson1D_Id(AB, &lab, &la, &kv);
+  //write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "./direct dat/AB_Id.dat");
 
   double *RHS_dgbmv = (double *) malloc(sizeof(double)*la);
 
   cblas_dgbmv(CblasColMajor,CblasNoTrans,la,la,kl,ku,1.0,AB+1,lab,EX_SOL,1,0.0,RHS_dgbmv,1);
-  write_vec(RHS_dgbmv, &la, "RHS_dgbmv.dat");
+  write_vec(RHS_dgbmv, &la, "./direct dat/RHS_dgbmv.dat");
   
   printf("***** methode de validation DGBMV *****\n");
   cblas_daxpy(la, -1, RHS_dgbmv, 1, RHS, 1);
@@ -85,7 +85,7 @@ int main(int argc,char *argv[])
   clock_t fin_lu = clock();
 
   printf("Temps d'execution LU sans DGBTRF  = %f seconds\n", (double)(fin_lu - debut_lu) / CLOCKS_PER_SEC);
-  write_GB_operator_colMajor_poisson1D(AB_LU, &lab, &la, "notre_LU.dat");
+  write_GB_operator_colMajor_poisson1D(AB_LU, &lab, &la, "./direct dat/notre_LU.dat");
 
   printf("\n***** Factorisation LU avec DGBTRF *****\n");
 
@@ -95,13 +95,13 @@ int main(int argc,char *argv[])
   clock_t fin_trf = clock();
 
   printf("Temps d'execution DGBTRF  = %f seconds\n", (double)(fin_trf - debut_trf) / CLOCKS_PER_SEC);
-  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "./direct dat/LU.dat");
 
   printf("\n***** methode de validation LU *****\n");
-  cblas_daxpy(la, -1, AB_LU, 1, AB, 1);
+  cblas_daxpy(la, -1, AB, 1, AB_LU, 1);
 
   //calculer la norme
-  double norm_LU = cblas_dnrm2(la, AB, 1);
+  double norm_LU = cblas_dnrm2(la, AB_LU, 1);
   printf("Norm LU = %f\n",norm_LU);
   if (norm_LU == 0.0 ) printf("La methode est validé\n");
  
@@ -117,10 +117,10 @@ int main(int argc,char *argv[])
 
     clock_t debut_trs = clock();
     //dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
-    info = LAPACKE_dgbtrs(LAPACK_COL_MAJOR, 'N', la, kl, ku, NRHS, AB, lab, ipiv, RHS, la);
+    LAPACK_dgbtrs("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
     clock_t fin_trs = clock();
 
-    write_xy(RHS, X, &la, "DGBTRS.dat");
+    write_xy(RHS, X, &la, "./direct dat/DGBTRS.dat");
 
     printf("Temps d'execution dgbtrf + dgbtrs = %f seconds\n", (double)((fin_trf - debut_trf) + (fin_trs - debut_trs)) / CLOCKS_PER_SEC);
 
@@ -146,12 +146,12 @@ int main(int argc,char *argv[])
     LAPACK_dgbsv(&la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
     clock_t fin_sv = clock();
 
-    write_xy(RHS, X, &la, "DGBSV.dat");
+    write_xy(RHS, X, &la, "./direct dat/DGBSV.dat");
 
     printf("Temps d'execution dgbsv = %f seconds\n",(double) (fin_sv - debut_sv) / CLOCKS_PER_SEC);
 
 
-    if (info!=0){printf("\n INFO DGBTRS = %d\n",info);}
+    if (info!=0){printf("\n INFO DGBSV = %d\n",info);}
     }else{
      printf("\n INFO = %d\n",info);
     }
@@ -159,7 +159,7 @@ int main(int argc,char *argv[])
 
 
 
-  write_xy(RHS, X, &la, "SOL.dat");
+  write_xy(RHS, X, &la, "./direct dat/SOL.dat");
 
   /* Relative forward error */
   temp = cblas_ddot(la, RHS, 1, RHS,1);

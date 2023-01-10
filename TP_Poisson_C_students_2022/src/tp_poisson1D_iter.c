@@ -48,9 +48,9 @@ int main(int argc,char *argv[])
   set_dense_RHS_DBC_1D(RHS,&la,&T0,&T1);
   set_analytical_solution_DBC_1D(EX_SOL, X, &la, &T0, &T1);
   
-  write_vec(RHS, &la, "RHS.dat");
-  write_vec(EX_SOL, &la, "EX_SOL.dat");
-  write_vec(X, &la, "X_grid.dat");
+  write_vec(RHS, &la, "./iter dat/RHS.dat");
+  write_vec(EX_SOL, &la, "./iter dat/EX_SOL.dat");
+  write_vec(X, &la, "./iter dat/X_grid.dat");
 
   kv=0;
   ku=1;
@@ -61,7 +61,7 @@ int main(int argc,char *argv[])
   set_GB_operator_colMajor_poisson1D(AB, &lab, &la, &kv);
   
   /* uncomment the following to check matrix A */
-  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "AB.dat");
+  write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "./iter dat/AB.dat");
   
   /********************************************/
   /* Solution (Richardson with optimal alpha) */
@@ -87,7 +87,7 @@ int main(int argc,char *argv[])
   printf("Temps d'execution RICHARDSON ALPHA  = %f seconds\n", (double)(fin_alpha - debut_alpha) / CLOCKS_PER_SEC);
 
   /* Write solution */
-  write_vec(SOL, &la, "SOL_ALPHA.dat");
+  write_vec(SOL, &la, "./iter dat/SOL_ALPHA.dat");
 
 
   printf("\n***** l\'erreur RICHARDSON ALPHA par rapport à la solution analytique *****\n");
@@ -125,7 +125,7 @@ int main(int argc,char *argv[])
   printf("***** Avec JACOBI *****\n");
 
   extract_MB_jacobi_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
-  write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "MB_JACOBI.dat");
+  write_GB_operator_colMajor_poisson1D(MB, &lab, &la, "./iter dat/MB_JACOBI.dat");
 
   /* Solve with General Richardson */
   clock_t debut_jacobi = clock();
@@ -134,7 +134,7 @@ int main(int argc,char *argv[])
 
   printf("Temps d'execution RICHARDSON JACOBI  = %f seconds\n", (double)(fin_jacobi - debut_jacobi) / CLOCKS_PER_SEC);
   /* Write solution */
-  write_vec(SOL, &la, "SOL_JACOBI.dat");
+  write_vec(SOL, &la, "./iter dat/SOL_JACOBI.dat");
 
   printf("\n***** l\'erreur RICHARDSON JACOBI par rapport à la solution analytique *****\n");
   /* Relative forward error */
@@ -160,7 +160,7 @@ int main(int argc,char *argv[])
   printf("\n***** Avec GAUSS SEIDEL *****\n");
 
   extract_MB_gauss_seidel_tridiag(AB, MB, &lab, &la, &ku, &kl, &kv);
-  write_GB_operator_colMajor_poisson1D(MB, &la, &la, "MB_GAUSS_SEIDEL.dat");
+  write_GB_operator_colMajor_poisson1D(MB, &la, &la, "./iter dat/MB_GAUSS_SEIDEL.dat");
 
   /* Solve with General Richardson */
   clock_t debut_gauss = clock();
@@ -171,7 +171,7 @@ int main(int argc,char *argv[])
 
   
   /* Write solution */
-  write_vec(SOL, &la, "SOL_GAUSS.dat");
+  write_vec(SOL, &la, "./iter dat/SOL_GAUSS.dat");
 
   printf("\n***** l\'erreur RICHARDSON GAUSS SEIDEL par rapport à la solution analytique *****\n");
   /* Relative forward error */
@@ -186,10 +186,10 @@ int main(int argc,char *argv[])
 
   
   /* Write solution */
-  write_vec(SOL, &la, "SOL.dat");
+  write_vec(SOL, &la, "./iter dat/SOL.dat");
 
   /* Write convergence history */
-  write_vec(resvec, &nbite, "RESVEC.dat");
+  write_vec(resvec, &nbite, "./iter dat/RESVEC.dat");
 
   free(resvec);
   free(RHS);
