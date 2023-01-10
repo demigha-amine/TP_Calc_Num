@@ -34,7 +34,35 @@ set output "perf_iter.png"
 
 plot "perf_iter.dat" using 2:xtic(1) title "RICHARDSON ALPHA" with lines lt rgb "blue",\
      "" using 3 title "RICHARDSON JACOBI" with lines lt rgb "green",\
-     "" using 4 title "RICHARDSON GAUSS" with lines lt rgb "yellow"
+     "" using 4 title "RICHARDSON GAUSS" with lines lt rgb "red"
+
+########################################################################################
+
+set xlabel "La taille du matrice"
+set ylabel "Temps d'éxécution (s)"
+set terminal png size 1000,600
+
+set title "l’erreur par rapport à la solution analytique"
+
+set output "perf_err.png"
+
+plot "perf_err.dat" using 2:xtic(1) title "RICHARDSON ALPHA" with lines lt rgb "blue",\
+     "" using 3 title "RICHARDSON JACOBI" with lines lt rgb "green",\
+     "" using 4 title "RICHARDSON GAUSS" with lines lt rgb "red"
+
+########################################################################################
+
+set xlabel "La taille du matrice"
+set ylabel "Temps d'éxécution (s)"
+set terminal png size 1000,600
+
+set title "Comparaison entre le nombre d'iteration"
+
+set output "perf_nbr.png"
+
+plot "perf_nbr.dat" using 2:xtic(1) title "RICHARDSON JACOBI" with lines lt rgb "blue",\
+     "" using 3 title "RICHARDSON GAUSS" with lines lt rgb "green"
+
 
 
 
