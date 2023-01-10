@@ -30,7 +30,7 @@ int main(int argc,char *argv[])
   T0=-5.0;
   T1=5.0;
 
-  printf("--------- Poisson 1D ---------\n\n");
+  printf("\n--------- Poisson 1D ---------\n\n");
   RHS=(double *) malloc(sizeof(double)*la);
   EX_SOL=(double *) malloc(sizeof(double)*la);
   X=(double *) malloc(sizeof(double)*la);
@@ -62,70 +62,65 @@ int main(int argc,char *argv[])
   cblas_dgbmv(CblasColMajor,CblasNoTrans,la,la,kl,ku,1.0,AB+1,lab,EX_SOL,1,0.0,RHS_dgbmv,1);
   write_vec(RHS_dgbmv, &la, "RHS_dgbmv.dat");
   
-  printf("methode de validation \n");
+  printf("***** methode de validation DGBMV *****\n");
   cblas_daxpy(la, -1, RHS_dgbmv, 1, RHS, 1);
 
   //calculer la norme
   double norm = cblas_dnrm2(la, RHS, 1);
-  printf("Norm = %f\n",norm);
-  printf("La methode est validé\n");
+  printf("Norm DGBMV = %f\n",norm);
+  if ((int)norm == 0 ) printf("La methode est validé\n");
 
-
-  printf("Solution with LAPACK\n");
+  printf("\n***** Solution with LAPACK *****");
   /* LU Factorization */
   info=0;
   ipiv = (int *) calloc(la, sizeof(int));
 
    /* LU for tridiagonal matrix  (can replace dgbtrf_) */
-  printf("Factorisation LU sans DGBTRF \n");
+  printf("\n***** Factorisation LU sans DGBTRF *****\n");
   double* AB_LU = (double *) malloc(sizeof(double)*lab*la);
   set_GB_operator_colMajor_poisson1D(AB_LU, &lab, &la, &kv);
-
-
 
   clock_t debut_lu = clock();
   ierr = dgbtrftridiag(&la, &la, &kl, &ku, AB_LU, &lab, ipiv, &info, &kv);
   clock_t fin_lu = clock();
 
   printf("Temps d'execution LU sans DGBTRF  = %f seconds\n", (double)(fin_lu - debut_lu) / CLOCKS_PER_SEC);
-
-
   write_GB_operator_colMajor_poisson1D(AB_LU, &lab, &la, "notre_LU.dat");
 
-  
-  clock_t debut_trf = clock();
+  printf("\n***** Factorisation LU avec DGBTRF *****\n");
 
+  clock_t debut_trf = clock();
   //dgbtrf_(&la, &la, &kl, &ku, AB, &lab, ipiv, &info);
   info = LAPACKE_dgbtrf(LAPACK_COL_MAJOR, la, la, kl, ku, AB, lab, ipiv);
-
   clock_t fin_trf = clock();
-  printf("Temps d'execution DGBTRF  = %f seconds\n", (double)(fin_trf - debut_trf) / CLOCKS_PER_SEC);
 
-  
+  printf("Temps d'execution DGBTRF  = %f seconds\n", (double)(fin_trf - debut_trf) / CLOCKS_PER_SEC);
   write_GB_operator_colMajor_poisson1D(AB, &lab, &la, "LU.dat");
 
-  printf("methode de validation LU \n");
+  printf("\n***** methode de validation LU *****\n");
   cblas_daxpy(la, -1, AB_LU, 1, AB, 1);
 
   //calculer la norme
   double norm_LU = cblas_dnrm2(la, AB, 1);
   printf("Norm LU = %f\n",norm_LU);
-  printf("La methode est validé\n");
+  if (norm_LU == 0.0 ) printf("La methode est validé\n");
  
   
   /* Solution (Triangular) */
+  printf("\n***** Solution (Triangular) *****");
+
   set_dense_RHS_DBC_1D(RHS,&la,&T0,&T1);
 
   if (info==0){
 
-    clock_t debut_trs = clock();
+    printf("\n***** Avec DGBTRF + DGBTRS *****\n");
 
+    clock_t debut_trs = clock();
     //dgbtrs_("N", &la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
     info = LAPACKE_dgbtrs(LAPACK_COL_MAJOR, 'N', la, kl, ku, NRHS, AB, lab, ipiv, RHS, la);
-
     clock_t fin_trs = clock();
 
-    write_xy(RHS, X, &la, "TRS.dat");
+    write_xy(RHS, X, &la, "DGBTRS.dat");
 
     printf("Temps d'execution dgbtrf + dgbtrs = %f seconds\n", (double)((fin_trf - debut_trf) + (fin_trs - debut_trs)) / CLOCKS_PER_SEC);
 
@@ -144,13 +139,14 @@ int main(int argc,char *argv[])
 
 
     if (info==0){
+    
+    printf("\n***** Avec DGBSV *****\n");
+
     clock_t debut_sv = clock();
-
     LAPACK_dgbsv(&la, &kl, &ku, &NRHS, AB, &lab, ipiv, RHS, &la, &info);
-
-
     clock_t fin_sv = clock();
-    write_xy(RHS, X, &la, "SV.dat");
+
+    write_xy(RHS, X, &la, "DGBSV.dat");
 
     printf("Temps d'execution dgbsv = %f seconds\n",(double) (fin_sv - debut_sv) / CLOCKS_PER_SEC);
 
