@@ -22,5 +22,19 @@ set output "perf_LU.png"
 plot "perf_LU.dat" using 2:xtic(1) title "Sans DGBTRF" with lines lt rgb "blue",\
      "" using 3 title "Avec DGBTRF" with lines lt rgb "green"
 
+########################################################################################
+
+set xlabel "La taille du matrice"
+set ylabel "Temps d'éxécution (s)"
+set terminal png size 1000,600
+
+set title "Comparaison entre les methodes iteratives"
+
+set output "perf_iter.png"
+
+plot "perf_iter.dat" using 2:xtic(1) title "RICHARDSON ALPHA" with lines lt rgb "blue",\
+     "" using 3 title "RICHARDSON JACOBI" with lines lt rgb "green",\
+     "" using 4 title "RICHARDSON GAUSS" with lines lt rgb "yellow"
+
 
 
